@@ -1,69 +1,89 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+
+type Movie = {
+  id: number;
+  title: string;
+  overview: string;
+  poster_path: string | null;
+  release_date: string;
+  vote_average: number;
+};
 
 export default function Home() {
+  const [movie, setMovie] = useState<Movie | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function getRandomMovie() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/random-movie');
+      if (!res.ok) throw new Error('Ошибка запроса');
+      const data = await res.json();
+      setMovie(data);
+    } catch (e) {
+      setError('Не удалось загрузить фильм 😢');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center p-6">
+      <h1 className="text-4xl font-bold mb-8">🎬 Что посмотреть?</h1>
+
+      {!movie && !loading && (
+        <button
+          onClick={getRandomMovie}
+          className="px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-xl text-xl font-semibold transition"
+        >
+          🎲 Подобрать фильм
+        </button>
+      )}
+
+      {loading && <p className="text-zinc-400">Загружаем...</p>}
+
+      {error && (
+        <div className="text-center">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={getRandomMovie}
+            className="px-6 py-3 bg-purple-600 rounded-xl"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+            Попробовать снова
+          </button>
+        </div>
+      )}
+
+      {movie && !loading && (
+        <div className="max-w-md w-full bg-zinc-900 rounded-2xl overflow-hidden shadow-xl">
+          {movie.poster_path && (
+            <img
+              src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+              alt={movie.title}
+              className="w-full"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          )}
+          <div className="p-6">
+            <h2 className="text-2xl font-bold mb-2">{movie.title}</h2>
+            <p className="text-sm text-zinc-400 mb-4">
+              {movie.release_date?.slice(0, 4)} · ⭐ {movie.vote_average.toFixed(1)}
+            </p>
+            <p className="text-zinc-300 text-sm mb-6 line-clamp-4">
+              {movie.overview || 'Описание отсутствует'}
+            </p>
+            <button
+              onClick={getRandomMovie}
+              className="w-full py-3 bg-purple-600 hover:bg-purple-700 rounded-xl font-semibold transition"
+            >
+              🎲 Ещё один
+            </button>
+          </div>
         </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
