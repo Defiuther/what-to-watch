@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 type Movie = {
-  id: number;
+  id: string;
   title: string;
   overview: string;
   poster_path: string | null;
@@ -15,10 +15,12 @@ export default function Home() {
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imgFailed, setImgFailed] = useState(false);
 
   async function getRandomMovie() {
     setLoading(true);
     setError(null);
+    setImgFailed(false);
     try {
       const res = await fetch('/api/random-movie');
       if (!res.ok) throw new Error('Ошибка запроса');
@@ -60,12 +62,17 @@ export default function Home() {
 
       {movie && !loading && (
         <div className="max-w-md w-full bg-zinc-900 rounded-2xl overflow-hidden shadow-xl">
-          {movie.poster_path && (
+          {movie.poster_path && !imgFailed ? (
             <img
-              src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+              src={movie.poster_path}
               alt={movie.title}
-              className="w-full"
+              className="w-full h-auto"
+              onError={() => setImgFailed(true)}
             />
+          ) : (
+            <div className="h-64 bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-7xl">
+              🎬
+            </div>
           )}
           <div className="p-6">
             <h2 className="text-2xl font-bold mb-2">{movie.title}</h2>
