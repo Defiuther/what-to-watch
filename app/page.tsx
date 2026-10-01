@@ -16,15 +16,26 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imgFailed, setImgFailed] = useState(false);
+  
+  const [genre, setGenre] = useState('any');
+  const [year, setYear] = useState('any');
+  const [rating, setRating] = useState('0');
 
   async function getRandomMovie() {
     setLoading(true);
     setError(null);
     setImgFailed(false);
     try {
-      const res = await fetch('/api/random-movie');
-      if (!res.ok) throw new Error('Ошибка запроса');
+      const params = new URLSearchParams({ genre, year, rating });
+      const res = await fetch(`/api/random-movie?${params}`);
       const data = await res.json();
+      
+      if (!res.ok) {
+        setError(data.error || 'Ошибка загрузки 😢');
+        setMovie(null);
+        return;
+      }
+      
       setMovie(data);
     } catch (e) {
       setError('Не удалось загрузить фильм 😢');
@@ -35,7 +46,48 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center p-6">
-      <h1 className="text-4xl font-bold mb-8">🎬 Что посмотреть?</h1>
+      <h1 className="text-4xl font-bold mb-6">🎬 Что посмотреть?</h1>
+
+      {/* Фильтры */}
+      <div className="flex flex-wrap gap-3 mb-6 w-full max-w-2xl justify-center">
+        <select
+          value={genre}
+          onChange={(e) => setGenre(e.target.value)}
+          className="px-4 py-2 bg-zinc-800 rounded-lg border border-zinc-700 text-white"
+        >
+          <option value="any">🎭 Любой жанр</option>
+          <option value="action">💥 Боевик</option>
+          <option value="comedy">😂 Комедия</option>
+          <option value="drama">🎭 Драма</option>
+          <option value="thriller">🔪 Триллер</option>
+          <option value="crime">🕵️ Криминал</option>
+          <option value="fantasy">🚀 Фантастика</option>
+        </select>
+
+        <select
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          className="px-4 py-2 bg-zinc-800 rounded-lg border border-zinc-700 text-white"
+        >
+          <option value="any">📅 Любой год</option>
+          <option value="1900-1980">📼 До 1980</option>
+          <option value="1980-2000">📺 1980-2000</option>
+          <option value="2000-2010">💿 2000-2010</option>
+          <option value="2010-2025">🆕 2010+</option>
+        </select>
+
+        <select
+          value={rating}
+          onChange={(e) => setRating(e.target.value)}
+          className="px-4 py-2 bg-zinc-800 rounded-lg border border-zinc-700 text-white"
+        >
+          <option value="0">⭐ Любой рейтинг</option>
+          <option value="7">⭐ 7+</option>
+          <option value="8">⭐ 8+</option>
+          <option value="8.5">🌟 8.5+</option>
+          <option value="9">💎 9+</option>
+        </select>
+      </div>
 
       {!movie && !loading && (
         <button
